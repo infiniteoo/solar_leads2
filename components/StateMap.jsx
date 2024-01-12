@@ -1,11 +1,14 @@
-"use client";
+// Import necessary libraries
 import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
 import * as topojson from "topojson";
+import LeadForm from "./LeadForm"; // Import your LeadForm component
 
+// Component for the StateMap
 const StateMap = () => {
   const [us, setUs] = useState(null);
   const [counties, setCounties] = useState(null);
+  const [selectedCounty, setSelectedCounty] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -20,7 +23,6 @@ const StateMap = () => {
 
         setUs(usData);
         setCounties(countiesData);
-        console.log(countiesData);
       } catch (error) {
         console.error("Error loading data:", error);
       }
@@ -38,7 +40,7 @@ const StateMap = () => {
       const countyNameMap = new Map();
 
       const svg = d3
-        .select("body")
+        .select("#map-container")
         .append("svg")
         .attr("width", width)
         .attr("height", height);
@@ -73,7 +75,8 @@ const StateMap = () => {
         .datum(state)
         .attr("class", "outline")
         .attr("d", path)
-        .attr("id", "land");
+        .attr("id", "land")
+        .style("stroke-width", 0); // Set stroke width to zero
 
       svg
         .append("clipPath")
@@ -123,7 +126,6 @@ const StateMap = () => {
             console.warn("County ID is undefined:", d);
           }
         })
-
         .on("mouseout", function () {
           d3.select(".county-label").style("display", "none");
         })
@@ -134,12 +136,7 @@ const StateMap = () => {
             const countyName = countyNameMap.get("0" + countyId);
 
             if (countyName) {
-              d3.select("#popup")
-                .style("display", "flex")
-                .style("left", "calc(25% + 150px)")
-                .style("top", "150%");
-
-              document.getElementById("county").value = countyName;
+              setSelectedCounty(countyName);
             } else {
               console.warn("No name property found for county ID:", countyId);
             }
@@ -147,7 +144,6 @@ const StateMap = () => {
             console.warn("County ID is undefined:", d);
           }
         })
-
         .style(
           "fill",
           () => "#" + Math.floor(Math.random() * 16777215).toString(16)
@@ -155,81 +151,17 @@ const StateMap = () => {
     }
   }, [us, counties]);
 
-  const submitForm = () => {
-    const successMessage = document.getElementById("successMessage");
-    successMessage.style.display = "block";
-
-    const popup = document.getElementById("popup");
-    popup.style.display = "none";
-
-    // Implement your email sending logic here
-    const county = document.getElementById("county").value;
-    const name = document.getElementById("name").value;
-    const email = document.getElementById("email").value;
-    const phone = document.getElementById("phone").value;
-    const address = document.getElementById("address").value;
-    const provider = document.getElementById("provider").value;
-    const averagebill = document.getElementById("averagebill").value;
-
-    // You can use an API endpoint or a server-side script to handle the email sending
-    // For example, using fetch to send the data to a server-side script
-    // Update the fetch request in the submitForm function
-    fetch("/send-email", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        county: county,
-        name: name,
-        email: email,
-        phone: phone,
-        provider: provider,
-        averagebill: averagebill,
-        address: address,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Email sent successfully:", data);
-      })
-      .catch((error) => {
-        console.error("Error sending email:", error);
-      });
+  const resetForm = () => {
+    setSelectedCounty(null);
   };
 
   return (
-    <div id="popup" className="popup">
-      <h2 className="mb-10">Contact Form</h2>
-      <form id="contactForm">
-        <label htmlFor="name">Your Name:</label>
-        <input type="text" id="name" name="name" required />
-
-        <label htmlFor="email">Email:</label>
-        <input type="email" id="email" name="email" required />
-
-        <label htmlFor="phone">Phone:</label>
-        <input type="tel" id="phone" name="phone" required />
-
-        <label htmlFor="address">Address:</label>
-        <input type="text" id="address" name="address" required />
-
-        <label htmlFor="provider">Current Utility Provider:</label>
-        <input type="text" id="provider" name="provider" required />
-
-        <label htmlFor="averagebill">Average Monthly Bill:</label>
-        <input type="text" id="averagebill" name="averagebill" required />
-
-        <label htmlFor="county">County:</label>
-        <input type="text" id="county" name="county" readOnly />
-        <button type="button" onClick={submitForm}>
-          Submit
-        </button>
-      </form>
-
-      <div id="successMessage" style={{ display: "none" }}>
-        We will contact you shortly.
-      </div>
+    <div className="container">
+      <div id="map-container" className="map"></div>
+      {/* Render the LeadForm component only when a county is selected */}
+      {selectedCounty && (
+        <LeadForm county={selectedCounty} resetForm={resetForm} />
+      )}
     </div>
   );
 };
