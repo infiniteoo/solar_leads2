@@ -23,7 +23,7 @@ const LeadForm = ({ county }) => {
   };
 
   return (
-    <div className="form">
+    <div className="form popup">
       <h2 className="mb-10">Contact Form</h2>
       <form>
         <label htmlFor="name">Your Name:</label>
