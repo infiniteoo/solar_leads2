@@ -16,10 +16,35 @@ const LeadForm = ({ county }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = () => {
-    // Implement your logic for form submission
-    console.log("Form submitted:", formData);
-    // You can make an API request or handle the form submission as needed
+  const handleSubmit = async () => {
+    try {
+      // Make an API request to the /api/send-email endpoint
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          county: county || "", // Add county to the form data
+        }),
+      });
+
+      if (response.ok) {
+        // Successful response
+        const result = await response.json();
+        console.log(result.message);
+        // You can handle success accordingly, e.g., show a success message
+      } else {
+        // Error response
+        const errorData = await response.json();
+        console.error("Error submitting form:", errorData.error);
+        // Handle the error, e.g., show an error message
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      // Handle unexpected errors, e.g., show a generic error message
+    }
   };
 
   return (
