@@ -1,8 +1,11 @@
-// Import necessary libraries
 import React, { useState } from "react";
+import dotenv from "dotenv";
+import emailjs from "@emailjs/browser";
 
+dotenv.config();
 // Component for the LeadForm
 const LeadForm = ({ county }) => {
+  console.log(process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -18,7 +21,49 @@ const LeadForm = ({ county }) => {
 
   const handleSubmit = async () => {
     try {
-      // Make an API request to the /api/send-email endpoint
+      const mailOptions = {
+        from: "davidgoldsolar@outlook.com",
+        to: "davidgoldsolar@outlook.com",
+        subject: "New Form Submission",
+        text: `
+          County: ${county}
+          Name: ${formData.name}
+          Email: ${formData.email}
+          Phone: ${formData.phone}
+          Address: ${formData.address}
+          Provider: ${formData.provider}
+          Average Monthly Bill: ${formData.averagebill}
+        `,
+      };
+
+      emailjs
+        .send(
+          process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
+          process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
+          {
+            from_name: `${formData.name}`,
+            to_name: "David Gold",
+            from_email: mailOptions.from,
+            to_email: mailOptions.to,
+            message: mailOptions.text,
+            subject: mailOptions.subject,
+          },
+          process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
+        )
+        .then(
+          () => {
+            console.log(
+              "Thank you. I will get back to you as soon as possible."
+            );
+          },
+          (error) => {
+            console.error(error);
+
+            console.log("Ahh, something went wrong. Please try again.");
+          }
+        );
+
+      /* // Make an API request to the /api/send-email endpoint
       const response = await fetch("/api/send-email", {
         method: "POST",
         headers: {
@@ -40,7 +85,7 @@ const LeadForm = ({ county }) => {
         const errorData = await response.json();
         console.error("Error submitting form:", errorData.error);
         // Handle the error, e.g., show an error message
-      }
+      } */
     } catch (error) {
       console.error("Error submitting form:", error);
       // Handle unexpected errors, e.g., show a generic error message
