@@ -2,9 +2,8 @@
 import React, { useEffect, useState } from "react";
 import * as d3 from "d3";
 import * as topojson from "topojson";
-import LeadForm from "./LeadForm"; // Import your LeadForm component
+import LeadForm from "./LeadForm";
 
-// Component for the StateMap
 const StateMap = () => {
   const [us, setUs] = useState(null);
   const [counties, setCounties] = useState(null);
@@ -13,7 +12,6 @@ const StateMap = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load JSON files directly from your project folder
         const usData = await import("../data/us.json").then(
           (res) => res.default
         );
@@ -76,7 +74,7 @@ const StateMap = () => {
         .attr("class", "outline")
         .attr("d", path)
         .attr("id", "land")
-        .style("stroke-width", 0); // Set stroke width to zero
+        .style("stroke-width", 0);
 
       svg
         .append("clipPath")
@@ -118,7 +116,15 @@ const StateMap = () => {
                   "transform",
                   "translate(" + projection(d3.geoCentroid(d)) + ")"
                 )
-                .style("display", "flex");
+                .style("display", "flex")
+                .style("background-color", "#1d2941")
+                .style("padding", "5px")
+                .style("border-radius", "4px")
+                .style("color", "#fff")
+                .style("font-size", "36px")
+                .style("font-weight", "bold")
+                .style("border", "1px solid #4b6cb7")
+                .style("box-shadow", "0 0 10px rgba(0, 0, 0, 0.5)");
             } else {
               console.warn("No name property found for county ID:", countyId);
             }
@@ -158,7 +164,7 @@ const StateMap = () => {
   return (
     <div className="container">
       <div id="map-container" className="map"></div>
-      {/* Render the LeadForm component only when a county is selected */}
+
       {selectedCounty && (
         <LeadForm county={selectedCounty} resetForm={resetForm} />
       )}

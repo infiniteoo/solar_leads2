@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import dotenv from "dotenv";
 import emailjs from "@emailjs/browser";
+import ConfirmationModal from "./ConfirmationModal";
 
-dotenv.config();
-// Component for the LeadForm
 const LeadForm = ({ county }) => {
   console.log(process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID);
   const [formData, setFormData] = useState({
@@ -15,23 +13,33 @@ const LeadForm = ({ county }) => {
     averagebill: "",
   });
 
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    isSuccess: false,
+    message: "",
+  });
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleCloseModal = () => {
+    setModalState({ isOpen: false, isSuccess: false, message: "" });
   };
 
   const handleSubmit = async () => {
     try {
       const mailOptions = {
-        from: "davidgoldsolar@outlook.com",
-        to: "davidgoldsolar@outlook.com",
-        subject: "New Form Submission",
+        from: process.env.NEXT_PUBLIC_EMAIL_USER,
+        to: process.env.NEXT_PUBLIC_EMAIL_USER,
+        subject: "New Solar Lead Submission",
         text: `
           County: ${county}
           Name: ${formData.name}
-          Email: ${formData.email}
-          Phone: ${formData.phone}
-          Address: ${formData.address}
-          Provider: ${formData.provider}
+          Email Address: ${formData.email}
+          Phone Number: ${formData.phone}
+          Physical Address: ${formData.address}
+          Current Energy Provider: ${formData.provider}
           Average Monthly Bill: ${formData.averagebill}
         `,
       };
@@ -52,49 +60,49 @@ const LeadForm = ({ county }) => {
         )
         .then(
           () => {
-            console.log(
-              "Thank you. I will get back to you as soon as possible."
-            );
+            setModalState({
+              isOpen: true,
+              isSuccess: true,
+              message: "Thank you. I will get back to you as soon as possible.",
+            });
+
+            // Clear the form data and hide the contact form
+            setFormData({
+              name: "",
+              email: "",
+              phone: "",
+              address: "",
+              provider: "",
+              averagebill: "",
+            });
+
+            setTimeout(() => {
+              setModalState({ isOpen: false, isSuccess: false, message: "" });
+            }, 3000);
           },
           (error) => {
-            console.error(error);
-
-            console.log("Ahh, something went wrong. Please try again.");
+            setModalState({
+              isOpen: true,
+              isSuccess: false,
+              message: "Ahh, something went wrong. Please try again.",
+            });
           }
         );
-
-      /* // Make an API request to the /api/send-email endpoint
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...formData,
-          county: county || "", // Add county to the form data
-        }),
-      });
-
-      if (response.ok) {
-        // Successful response
-        const result = await response.json();
-        console.log(result.message);
-        // You can handle success accordingly, e.g., show a success message
-      } else {
-        // Error response
-        const errorData = await response.json();
-        console.error("Error submitting form:", errorData.error);
-        // Handle the error, e.g., show an error message
-      } */
     } catch (error) {
       console.error("Error submitting form:", error);
-      // Handle unexpected errors, e.g., show a generic error message
+      setModalState({
+        isOpen: true,
+        isSuccess: false,
+        message: "Error submitting form. Please try again.",
+      });
     }
   };
 
   return (
     <div className="form popup">
-      <h2 className="mb-10">Contact Form</h2>
+      <h2 className="mb-10 text-5xl font-bold text-center">
+        Get Your Personal Solar Quote
+      </h2>
       <form>
         <label htmlFor="name">Your Name:</label>
         <input
@@ -164,12 +172,17 @@ const LeadForm = ({ county }) => {
           value={county || ""}
           readOnly
         />
-        <button type="button" onClick={handleSubmit}>
+        <button type="button" onClick={handleSubmit} className="text-4xl">
           Submit
         </button>
       </form>
 
-      {/* Add any additional elements or messages as needed */}
+      <ConfirmationModal
+        isOpen={modalState.isOpen}
+        isSuccess={modalState.isSuccess}
+        message={modalState.message}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };
